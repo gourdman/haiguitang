@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>项目目录结构展示</title>
+    <style>
+      :root {
+        --bg: #0f172a; /* slate-900-ish */
+        --panel: #111c3a;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #fbbf24; /* amber-400-ish */
+        --border: rgba(148, 163, 184, 0.25);
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        background: radial-gradient(1200px 500px at 20% 0%, rgba(251, 191, 36, 0.14), transparent),
+          var(--bg);
+        color: var(--text);
+      }
+      header {
+        padding: 20px 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      header h1 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 0.2px;
+        color: var(--accent);
+      }
+      header p {
+        margin: 8px 0 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .wrap {
+        padding: 16px;
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 14px;
+      }
+      @media (max-width: 900px) {
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+        border: 1px solid var(--border);
+        border-radius: 12px; /* rounded-lg */
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+      }
+      .card .card-body {
+        padding: 14px;
+      }
+      .searchRow {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      input[type="text"] {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text);
+        padding: 10px 12px;
+        outline: none;
+      }
+      input[type="text"]::placeholder {
+        color: rgba(148, 163, 184, 0.75);
+      }
+      .hint {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th,
+      td {
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      th {
+        text-align: left;
+        color: var(--accent);
+        font-weight: 600;
+      }
+      td.path {
+        color: var(--text);
+        white-space: nowrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+      }
+      .tree {
+        padding: 10px 14px 14px 14px;
+      }
+      .tree ul {
+        list-style: none;
+        padding-left: 18px;
+        margin: 0;
+      }
+      .node {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 0;
+      }
+      .caret {
+        width: 18px;
+        color: var(--muted);
+        user-select: none;
+      }
+      .name {
+        font-size: 13px;
+      }
+      .name.dir {
+        color: #93c5fd;
+      }
+      .name.file {
+        color: #a7f3d0;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .highlight {
+        background: rgba(251, 191, 36, 0.2);
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        border-radius: 6px;
+        padding: 1px 4px;
+      }
+      footer {
+        padding: 14px 16px 30px;
+        color: rgba(148, 163, 184, 0.85);
+        font-size: 12px;
+      }
+      button {
+        background: rgba(251, 191, 36, 0.12);
+        color: var(--accent);
+        border: 1px solid rgba(251, 191, 36, 0.28);
+        padding: 10px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: rgba(251, 191, 36, 0.18);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>项目目录结构展示</h1>
+      <p>基于当前工作区（前端 + 后端）的简化结构，便于快速了解入口文件与关键目录。</p>
+    </header>
+    <div class="wrap">
+      <section class="card">
+        <div class="card-body">
+          <div class="searchRow">
+            <input id="q" type="text" placeholder="搜索文件名/路径，例如 server.js 或 App.tsx" />
+            <button id="clear" type="button">清空</button>
+          </div>
+          <div class="hint">
+            搜索会高亮匹配项（不自动折叠/展开），方便你在树里定位。
+          </div>
+
+          <div style="height: 12px"></div>
+          <table>
+            <thead>
+              <tr>
+                <th>路径</th>
+                <th>用途</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="tree" id="tree"></div>
+      </section>
+    </div>
+    <footer>
+      提示：直接用浏览器打开此文件即可查看（例如双击 `backend/structure.html`）。
+    </footer>
+
+    <script>
+      const DATA = {
+        type: "dir",
+        name: "ai-haigui-game",
+        meta: "React + TS 前端 + Node.js/Express 后端（项目根目录）",
+        children: [
+          {
+            type: "file",
+            name: "package.json",
+            meta: "前端依赖与脚本（Vite：dev/build/preview）"
+          },
+          {
+            type: "file",
+            name: "index.html",
+            meta: "Vite 入口 HTML"
+          },
+          {
+            type: "file",
+            name: "vite.config.ts",
+            meta: "Vite 配置"
+          },
+          {
+            type: "file",
+            name: "tailwind.config.js",
+            meta: "Tailwind CSS 配置"
+          },
+          {
+            type: "dir",
+            name: "src",
+            meta: "React 前端源码",
+            children: [
+              { type: "dir", name: "api", meta: "前端 API 封装" },
+              { type: "dir", name: "components", meta: "可复用 UI 组件" },
+              { type: "dir", name: "data", meta: "静态数据/配置" },
+              { type: "dir", name: "pages", meta: "页面级组件" },
+              { type: "dir", name: "routes", meta: "路由定义" },
+              { type: "dir", name: "types", meta: "类型定义" },
+              { type: "file", name: "api.ts", meta: "API 相关入口/封装" },
+              { type: "file", name: "App.tsx", meta: "应用根组件" },
+              { type: "file", name: "main.tsx", meta: "React 挂载入口" },
+              { type: "file", name: "index.css", meta: "全局样式（Tailwind 等）" },
+              { type: "file", name: "vite-env.d.ts", meta: "Vite TS 声明" }
+            ]
+          },
+          {
+            type: "dir",
+            name: "public",
+            meta: "前端静态资源",
+            children: [{ type: "file", name: "vite.svg", meta: "Vite 默认图标" }]
+          },
+          {
+            type: "dir",
+            name: "dist",
+            meta: "前端构建输出（`vite build` 生成）"
+          },
+          {
+            type: "dir",
+            name: "backend",
+            meta: "Node.js + Express 后端服务",
+            children: [
+              {
+                type: "file",
+                name: "server.js",
+                meta: "Express 入口：CORS + 路由（GET /api/test）+ 错误处理"
+              },
+              {
+                type: "file",
+                name: "package.json",
+                meta: "后端依赖与启动脚本（start/dev）"
+              },
+              {
+                type: "file",
+                name: ".env.example",
+                meta: "后端环境变量示例（PORT、CORS_ORIGIN）"
+              },
+              {
+                type: "file",
+                name: "README.md",
+                meta: "启动与接口说明"
+              }
+            ]
+          }
+        ]
+      };
+
+      const TABLE = [
+        { path: "package.json", purpose: "前端依赖与脚本（Vite）" },
+        { path: "index.html", purpose: "前端入口 HTML" },
+        { path: "vite.config.ts", purpose: "Vite 配置" },
+        { path: "tailwind.config.js", purpose: "Tailwind CSS 配置" },
+        { path: "src/", purpose: "前端源码目录（api/components/pages/routes/types 等）" },
+        { path: "src/App.tsx", purpose: "React 应用根组件" },
+        { path: "src/main.tsx", purpose: "React 挂载入口" },
+        { path: "public/", purpose: "前端静态资源目录" },
+        { path: "backend/server.js", purpose: "Express 服务器入口；配置 CORS；提供 GET /api/test；启动监听" },
+        { path: "backend/package.json", purpose: "后端依赖与脚本：`npm run start` / `npm run dev`" },
+        { path: "backend/.env.example", purpose: "环境变量示例：`PORT`、`CORS_ORIGIN`" },
+        { path: "backend/README.md", purpose: "后端启动方式与 API/CORS 说明" }
+      ];
+
+      function escapeHtml(s) {
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function highlight(text, q) {
+        const str = String(text);
+        if (!q) return escapeHtml(str);
+        const idx = str.toLowerCase().indexOf(q.toLowerCase());
+        if (idx === -1) return escapeHtml(str);
+        const a = escapeHtml(str.slice(0, idx));
+        const b = escapeHtml(str.slice(idx, idx + q.length));
+        const c = escapeHtml(str.slice(idx + q.length));
+        return a + '<span class="highlight">' + b + "</span>" + c;
+      }
+
+      function renderTree(node, q) {
+        const el = document.createElement("ul");
+        const li = document.createElement("li");
+        const row = document.createElement("div");
+        row.className = "node";
+
+        const caret = document.createElement("div");
+        caret.className = "caret";
+        caret.textContent = node.children ? "▾" : "•";
+
+        const name = document.createElement("div");
+        name.className = "name " + (node.type === "dir" ? "dir" : "file");
+        name.innerHTML = highlight(node.name, q);
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.innerHTML = node.meta ? highlight(node.meta, q) : "";
+
+        row.appendChild(caret);
+        row.appendChild(name);
+        row.appendChild(meta);
+        li.appendChild(row);
+
+        if (node.children && node.children.length) {
+          for (const child of node.children) {
+            const childTree = renderTree(child, q);
+            li.appendChild(childTree);
+          }
+        }
+
+        el.appendChild(li);
+        return el;
+      }
+
+      function renderTable(q) {
+        const body = document.getElementById("tableBody");
+        body.innerHTML = "";
+        for (const row of TABLE) {
+          const tr = document.createElement("tr");
+          const td1 = document.createElement("td");
+          td1.className = "path";
+          td1.innerHTML = highlight(row.path, q);
+
+          const td2 = document.createElement("td");
+          td2.innerHTML = highlight(row.purpose, q);
+
+          tr.appendChild(td1);
+          tr.appendChild(td2);
+          body.appendChild(tr);
+        }
+      }
+
+      function rerender() {
+        const q = document.getElementById("q").value.trim();
+        const treeRoot = document.getElementById("tree");
+        treeRoot.innerHTML = "";
+        // 使用递归渲染，展示前后端的关键目录/入口文件。
+        treeRoot.appendChild(renderTree(DATA, q));
+
+        renderTable(q);
+      }
+
+      document.getElementById("clear").addEventListener("click", () => {
+        document.getElementById("q").value = "";
+        rerender();
+      });
+      document.getElementById("q").addEventListener("input", rerender);
+
+      rerender();
+    </script>
+  </body>
+</html>
+

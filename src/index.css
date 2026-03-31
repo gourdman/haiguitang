@@ -1,0 +1,251 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 锚点跳转时略平滑，避免突兀跳动 */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* 汤底揭晓：光带扫过 + 正文渐入（StoryReveal） */
+@keyframes story-reveal-shimmer {
+  0% {
+    transform: scaleX(0.35);
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0.85;
+  }
+}
+
+.story-reveal-shimmer {
+  animation: story-reveal-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes story-reveal-veil-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 60px rgba(245, 158, 11, 0.06);
+  }
+  50% {
+    box-shadow: inset 0 0 80px rgba(245, 158, 11, 0.12);
+  }
+}
+
+.story-reveal-veil {
+  animation: story-reveal-veil-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes story-reveal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes story-reveal-glow {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(245, 158, 11, 0),
+      inset 0 0 0 rgba(245, 158, 11, 0);
+  }
+  40% {
+    box-shadow:
+      0 0 36px 2px rgba(245, 158, 11, 0.22),
+      inset 0 0 24px rgba(245, 158, 11, 0.06);
+  }
+  100% {
+    box-shadow:
+      0 8px 32px -4px rgba(15, 23, 42, 0.6),
+      inset 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.story-reveal-content {
+  animation: story-reveal-enter 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.story-reveal-content .story-reveal-glow {
+  animation: story-reveal-glow 1.4s ease-out forwards;
+}
+
+.story-reveal-content-static {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-reveal-shimmer,
+  .story-reveal-veil {
+    animation: none;
+  }
+
+  .story-reveal-content {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .story-reveal-content .story-reveal-glow {
+    animation: none;
+  }
+
+  .loading-dot:nth-child(1),
+  .loading-dot:nth-child(2),
+  .loading-dot:nth-child(3),
+  .chat-empty-glow,
+  .msg-enter,
+  .chat-empty-enter,
+  .toast-enter,
+  .animate-spin {
+    animation: none !important;
+  }
+}
+
+/* 加载三点 */
+@keyframes loading-dot-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.loading-dot:nth-child(1) {
+  animation: loading-dot-bounce 1s ease-in-out infinite;
+}
+.loading-dot:nth-child(2) {
+  animation: loading-dot-bounce 1s ease-in-out 0.15s infinite;
+}
+.loading-dot:nth-child(3) {
+  animation: loading-dot-bounce 1s ease-in-out 0.3s infinite;
+}
+
+/* 消息入场 */
+@keyframes msg-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.msg-enter {
+  animation: msg-enter 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 空状态轻微呼吸光 */
+@keyframes chat-empty-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.15));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.35));
+    transform: scale(1.04);
+  }
+}
+
+.chat-empty-glow {
+  animation: chat-empty-glow 3.5s ease-in-out infinite;
+}
+
+@keyframes chat-empty-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-empty-enter {
+  animation: chat-empty-fade 0.5s ease-out both;
+}
+
+/* Toast 滑入 */
+@keyframes toast-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast-enter {
+  animation: toast-slide-up 0.35s ease-out both;
+}
+
+/* 可点击元素：移动端减少点按延迟 */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* 全局：神秘悬疑深蓝底，与 AGENTS.md 一致 */
+body {
+  @apply min-h-screen bg-slate-900 text-slate-100 antialiased;
+}
+
+/* Home：大堡礁式阳光珊瑚礁（明亮；可换 public 本地图） */
+.home-ocean-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-color: #0d4a5c;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.18) 0%,
+      rgba(15, 23, 42, 0.12) 35%,
+      rgba(15, 23, 42, 0.42) 100%
+    ),
+    url('https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=1920&q=80');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+/* Home：轻遮罩：保对比度但不压暗礁景 */
+.home-mist {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(to top, rgba(15, 23, 42, 0.5) 0%, transparent 55%),
+    radial-gradient(ellipse 95% 50% at 50% 100%, rgba(13, 148, 136, 0.12), transparent 70%),
+    radial-gradient(ellipse 75% 42% at 0% 100%, rgba(14, 116, 144, 0.18), transparent 58%),
+    radial-gradient(ellipse 70% 40% at 100% 95%, rgba(14, 116, 144, 0.16), transparent 55%),
+    radial-gradient(ellipse 60% 42% at 50% 0%, rgba(8, 51, 68, 0.22), transparent 65%);
+}

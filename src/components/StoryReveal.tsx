@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { StoryRevealConfetti } from './StoryRevealConfetti'
 
 type TStoryRevealProps = {
   /** 故事标题（揭晓区上方展示） */
@@ -53,52 +54,59 @@ export function StoryReveal({
         aria-hidden
       />
 
-      <div className="relative border border-amber-500/35 bg-gradient-to-b from-slate-800/95 to-slate-900/90 px-5 py-6 sm:px-7 sm:py-8">
-        <p className="text-center text-xs font-medium uppercase tracking-[0.2em] text-amber-500/80">
-          汤底揭晓
-        </p>
-        <h2 className="mt-3 text-center text-xl font-semibold leading-snug text-amber-400 sm:text-2xl">
-          {storyTitle}
-        </h2>
-        {storyDescription ? (
-          <p className="mx-auto mt-2 max-w-md text-pretty text-center text-sm leading-relaxed text-slate-400">
-            {storyDescription}
-          </p>
+      <div className="relative overflow-hidden rounded-[inherit] border border-amber-500/35 bg-gradient-to-b from-slate-800/95 to-slate-900/90 px-5 py-6 sm:px-7 sm:py-8">
+        {/* 揭晓瞬间礼花（帷幕结束、正文入场时；减少动画偏好下不渲染） */}
+        {phase === 'revealed' && !prefersReducedMotion ? (
+          <StoryRevealConfetti />
         ) : null}
 
-        {/* 等待阶段：帷幕 */}
-        {phase === 'waiting' && (
-          <button
-            type="button"
-            onClick={skipWait}
-            className="story-reveal-veil mt-8 flex w-full flex-col items-center justify-center rounded-lg border border-amber-600/30 bg-slate-950/70 px-4 py-14 text-center transition hover:border-amber-500/50 hover:bg-slate-950/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60"
-            aria-label="立即揭晓汤底"
-          >
-            <span
-              className="inline-block h-1 w-16 rounded-full bg-amber-400/60 story-reveal-shimmer"
-              aria-hidden
-            />
-            <p className="mt-5 text-sm text-amber-200/90">真相正在浮现…</p>
-            <p className="mt-2 text-xs text-slate-500">点击可跳过等待</p>
-          </button>
-        )}
-
-        {/* 汤底正文：揭晓后大段突出 */}
-        <div
-          className={
-            phase === 'revealed'
-              ? prefersReducedMotion
-                ? 'story-reveal-content-static mt-8'
-                : 'story-reveal-content mt-8'
-              : 'sr-only'
-          }
-          aria-hidden={phase !== 'revealed'}
-        >
-          <div className="story-reveal-glow rounded-lg border-2 border-amber-400/45 bg-slate-950/50 px-4 py-5 sm:px-6 sm:py-6">
-            <h3 className="text-sm font-semibold text-amber-300/95">完整汤底</h3>
-            <p className="mt-4 whitespace-pre-wrap text-base leading-[1.75] text-slate-100 sm:text-lg">
-              {bottom}
+        <div className="relative z-10">
+          <p className="text-center text-xs font-medium uppercase tracking-[0.2em] text-amber-500/80">
+            汤底揭晓
+          </p>
+          <h2 className="mt-3 text-center text-xl font-semibold leading-snug text-amber-400 sm:text-2xl">
+            {storyTitle}
+          </h2>
+          {storyDescription ? (
+            <p className="mx-auto mt-2 max-w-md text-pretty text-center text-sm leading-relaxed text-slate-400">
+              {storyDescription}
             </p>
+          ) : null}
+
+          {/* 等待阶段：帷幕 */}
+          {phase === 'waiting' && (
+            <button
+              type="button"
+              onClick={skipWait}
+              className="story-reveal-veil mt-8 flex w-full flex-col items-center justify-center rounded-lg border border-amber-600/30 bg-slate-950/70 px-4 py-14 text-center transition hover:border-amber-500/50 hover:bg-slate-950/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60"
+              aria-label="立即揭晓汤底"
+            >
+              <span
+                className="inline-block h-1 w-16 rounded-full bg-amber-400/60 story-reveal-shimmer"
+                aria-hidden
+              />
+              <p className="mt-5 text-sm text-amber-200/90">真相正在浮现…</p>
+              <p className="mt-2 text-xs text-slate-500">点击可跳过等待</p>
+            </button>
+          )}
+
+          {/* 汤底正文：揭晓后大段突出 */}
+          <div
+            className={
+              phase === 'revealed'
+                ? prefersReducedMotion
+                  ? 'story-reveal-content-static mt-8'
+                  : 'story-reveal-content mt-8'
+                : 'sr-only'
+            }
+            aria-hidden={phase !== 'revealed'}
+          >
+            <div className="story-reveal-glow rounded-lg border-2 border-amber-400/45 bg-slate-950/50 px-4 py-5 sm:px-6 sm:py-6">
+              <h3 className="text-sm font-semibold text-amber-300/95">完整汤底</h3>
+              <p className="mt-4 whitespace-pre-wrap text-base leading-[1.75] text-slate-100 sm:text-lg">
+                {bottom}
+              </p>
+            </div>
           </div>
         </div>
       </div>

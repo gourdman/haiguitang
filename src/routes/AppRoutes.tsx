@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import CategoryStories from '../pages/CategoryStories'
+import Congrats from '../pages/Congrats'
 import Game from '../pages/Game'
 import Home from '../pages/Home'
 import Result from '../pages/Result'
@@ -12,6 +13,7 @@ export function AppRoutes() {
       <Route path="/category/:categoryId" element={<CategoryStories />} />
       <Route path="/game/:id" element={<Game />} />
       <Route path="/result/:storyId" element={<Result />} />
+      <Route path="/congrats/:storyId" element={<Congrats />} />
       <Route path="*" element={<Home />} />
     </Routes>
   )

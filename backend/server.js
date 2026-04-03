@@ -184,6 +184,102 @@ async function callDeepSeekChat({ question, story }) {
   }
 }
 
+/** 从模型输出中解析 0–100 的整数匹配度 */
+function parseScore0to100(raw) {
+  const s = String(raw ?? '').trim();
+  const m = s.match(/\d{1,3}/);
+  if (!m) return null;
+  const n = parseInt(m[0], 10);
+  if (Number.isNaN(n)) return null;
+  return Math.min(100, Math.max(0, n));
+}
+
+async function callDeepSeekMatchScore({ playerAnswer, bottom }) {
+  const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+  if (!DEEPSEEK_API_KEY) {
+    throw createHttpError(
+      500,
+      'MISSING_DEEPSEEK_API_KEY',
+      'Missing DEEPSEEK_API_KEY in environment variables',
+    );
+  }
+
+  const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+  const DEEPSEEK_BASE_URL =
+    process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/chat/completions';
+
+  const systemMessage =
+    '你是海龟汤裁判。只根据给定「汤底」判断玩家这段话是否说中真相。输出且仅输出一个 0 到 100 的整数（不要其它任何字符）。若玩家几乎复述或完整复述「汤底」原文（仅差空白、标点或个别字），必须输出 100。100 表示玩家完整说中汤底核心真相；90–99 表示核心正确、细节略有出入；70–89 表示大致说中核心或关键情节；0–49 表示错误或基本无关。';
+
+  const userMessage = `汤底：\n${bottom}\n\n玩家表述：\n${playerAnswer}\n\n只输出 0–100 的整数：`;
+
+  const controller = new AbortController();
+  const timeoutMs = Number(process.env.DEEPSEEK_TIMEOUT_MS) || 30000;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(DEEPSEEK_BASE_URL, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: DEEPSEEK_MODEL,
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: userMessage },
+        ],
+        temperature: 0.1,
+        max_tokens: 8,
+      }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw createHttpError(
+        502,
+        'UPSTREAM_DEEPSEEK_ERROR',
+        `DeepSeek API error: ${response.status} ${response.statusText}${text ? ` - ${text}` : ''}`,
+      );
+    }
+
+    const data = await response.json();
+    const content =
+      data?.choices?.[0]?.message?.content ??
+      data?.choices?.[0]?.text ??
+      data?.output ??
+      '';
+
+    if (!content) {
+      throw createHttpError(502, 'EMPTY_DEEPSEEK_RESPONSE', 'DeepSeek API returned empty content');
+    }
+
+    const score = parseScore0to100(content);
+    if (score === null) {
+      throw createHttpError(
+        502,
+        'INVALID_MATCH_SCORE',
+        'Could not parse match score from model output',
+        { raw: String(content).slice(0, 200) },
+      );
+    }
+
+    return score;
+  } catch (err) {
+    if (err?.name === 'AbortError') {
+      throw createHttpError(504, 'UPSTREAM_TIMEOUT', 'DeepSeek request timeout');
+    }
+    if (err?.statusCode) throw err;
+    throw createHttpError(500, 'UPSTREAM_REQUEST_FAILED', 'Failed to request DeepSeek', {
+      reason: err?.message || 'unknown error',
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 app.post('/api/chat', async (req, res) => {
   try {
     const { question, story } = req.body || {};
@@ -201,6 +297,27 @@ app.post('/api/chat', async (req, res) => {
 
     const answer = await callDeepSeekChat({ question: question.trim(), story });
     return res.json({ ok: true, answer });
+  } catch (err) {
+    return sendError(res, err);
+  }
+});
+
+app.post('/api/match-score', async (req, res) => {
+  try {
+    const { playerAnswer, bottom } = req.body || {};
+
+    if (typeof playerAnswer !== 'string' || playerAnswer.trim().length === 0) {
+      throw createHttpError(400, 'INVALID_PLAYER_ANSWER', 'playerAnswer is required (string)');
+    }
+    if (typeof bottom !== 'string' || bottom.trim().length === 0) {
+      throw createHttpError(400, 'INVALID_BOTTOM', 'bottom is required (string)');
+    }
+
+    const score = await callDeepSeekMatchScore({
+      playerAnswer: playerAnswer.trim(),
+      bottom: bottom.trim(),
+    });
+    return res.json({ ok: true, score });
   } catch (err) {
     return sendError(res, err);
   }

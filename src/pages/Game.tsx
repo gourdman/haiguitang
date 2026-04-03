@@ -1,12 +1,17 @@
 import { useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { fetchHostAnswer } from '../api/hostAnswer'
+import { fetchMatchScore } from '../api/matchScore'
 import { HOST_INVALID_REPLY_USER_HINT } from '../api/hostReply'
 import { ChatBox } from '../components/ChatBox'
 import { Toast } from '../components/Toast'
 import { getStoryById } from '../data/stories'
+import { localSimilarityScore } from '../utils/answerSimilarity'
 import type { TMessage } from '../types/chat'
 import type { TGameSessionStatus } from '../types/game'
+
+/** 玩家表述与汤底语义匹配度达到该值及以上时，进入祝贺页 */
+const MATCH_WIN_THRESHOLD = 70
 
 /** 游戏页：根据 /game/:id 加载故事，汤面 + ChatBox 对话 + 底部操作（AI 经代理，密钥不在前端） */
 export default function Game() {
@@ -15,6 +20,7 @@ export default function Game() {
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<TMessage[]>([])
   const [isSending, setIsSending] = useState(false)
+  const navigate = useNavigate()
   /** 进行中：可提问；已结束：放弃本局后停止提问，仍可查看汤底或再来一局 */
   const [sessionStatus, setSessionStatus] = useState<TGameSessionStatus>('playing')
   /** 网络/API 失败时底部 Toast（与气泡内详细文案配合） */
@@ -72,12 +78,15 @@ export default function Game() {
     setIsSending(true)
 
     try {
-      const outcome = await fetchHostAnswer({
-        surface: activeStory.surface,
-        bottom: activeStory.bottom,
-        question: text,
-        history: prior,
-      })
+      const [outcome, matchScore] = await Promise.all([
+        fetchHostAnswer({
+          surface: activeStory.surface,
+          bottom: activeStory.bottom,
+          question: text,
+          history: prior,
+        }),
+        fetchMatchScore({ playerAnswer: text, bottom: activeStory.bottom }),
+      ])
       const replyText =
         outcome.kind === 'answer'
           ? outcome.text
@@ -94,6 +103,16 @@ export default function Game() {
             : m,
         ),
       )
+
+      const effectiveScore = Math.max(
+        matchScore ?? 0,
+        localSimilarityScore(text, activeStory.bottom),
+      )
+      if (effectiveScore >= MATCH_WIN_THRESHOLD) {
+        setSessionStatus('ended')
+        navigate(`/congrats/${activeStory.id}`, { replace: true })
+        return
+      }
     } catch (err) {
       const errorMessage = getErrorMessage(err)
       setToastError(errorMessage)

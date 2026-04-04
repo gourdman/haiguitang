@@ -1,6 +1,16 @@
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+
+// 从 backend 目录下的文件加载（不依赖进程 cwd）；优先 .env，否则回退 .env.example
+const envFile = path.join(__dirname, '.env');
+const envExampleFile = path.join(__dirname, '.env.example');
+if (fs.existsSync(envFile)) {
+  require('dotenv').config({ path: envFile });
+} else if (fs.existsSync(envExampleFile)) {
+  require('dotenv').config({ path: envExampleFile });
+}
 
 const app = express();
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -103,7 +113,7 @@ async function callDeepSeekChat({ question, story }) {
     throw createHttpError(
       500,
       'MISSING_DEEPSEEK_API_KEY',
-      'Missing DEEPSEEK_API_KEY in environment variables',
+      'Missing DEEPSEEK_API_KEY in backend/.env or backend/.env.example',
     );
   }
 
@@ -200,7 +210,7 @@ async function callDeepSeekMatchScore({ playerAnswer, bottom }) {
     throw createHttpError(
       500,
       'MISSING_DEEPSEEK_API_KEY',
-      'Missing DEEPSEEK_API_KEY in environment variables',
+      'Missing DEEPSEEK_API_KEY in backend/.env or backend/.env.example',
     );
   }
 

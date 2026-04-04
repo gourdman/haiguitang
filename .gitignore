@@ -27,13 +27,11 @@ lerna-debug.log*
 # =========================
 # Environment files (secrets)
 # =========================
-# `.env.example` / `backend/.env.example` 是模板，应提交到 Git；下面用 `!` 从 `.env.*` 规则里排除它们。
+# 含 `.env.example`：示例文件可能含密钥占位说明，勿提交到 Git。
 .env
 .env.*
 backend/.env
 backend/.env.*
-!.env.example
-!backend/.env.example
 
 # =========================
 # Local config/cache/temp

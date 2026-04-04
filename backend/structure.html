@@ -271,8 +271,8 @@
               },
               {
                 type: "file",
-                name: ".env.example",
-                meta: "后端环境变量示例（PORT、CORS_ORIGIN）"
+                name: ".env",
+                meta: "本地环境变量（含密钥，勿提交 Git；在 backend 目录自行创建）"
               },
               {
                 type: "file",
@@ -295,7 +295,7 @@
         { path: "public/", purpose: "前端静态资源目录" },
         { path: "backend/server.js", purpose: "Express 服务器入口；配置 CORS；提供 GET /api/test；启动监听" },
         { path: "backend/package.json", purpose: "后端依赖与脚本：`npm run start` / `npm run dev`" },
-        { path: "backend/.env.example", purpose: "环境变量示例：`PORT`、`CORS_ORIGIN`" },
+        { path: "backend/.env", purpose: "本地 secrets（如 `DEEPSEEK_API_KEY`、`PORT`），勿提交" },
         { path: "backend/README.md", purpose: "后端启动方式与 API/CORS 说明" }
       ];
 

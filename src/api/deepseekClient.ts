@@ -12,7 +12,7 @@ function chatCompletionsUrl(): string {
     return `${base.replace(/\/$/, '')}/chat/completions`
   }
   throw new Error(
-    '生产环境未配置 VITE_API_PROXY_BASE。静态站点无法安全持有密钥，请部署可注入 Authorization 的后端或边缘函数，见 .env.example。',
+    '生产环境未配置 VITE_API_PROXY_BASE。静态站点无法安全持有密钥，请部署可注入 Authorization 的后端或边缘函数，详见 AGENTS.md 与 backend/README.md。',
   )
 }
 

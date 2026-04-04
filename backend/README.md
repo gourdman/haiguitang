@@ -6,6 +6,14 @@ cd backend
 npm install
 ```
 
+在 `backend` 目录本地创建 `.env`（**不要提交到 Git**），按需设置，例如：
+
+- `DEEPSEEK_API_KEY`：DeepSeek API 密钥（必填，用于 `/api/chat`）
+- `DEEPSEEK_MODEL`：可选，默认 `deepseek-chat`
+- `DEEPSEEK_TIMEOUT_MS`：可选，上游超时毫秒数
+- `PORT`：可选，默认 `3001`
+- `CORS_ORIGIN`：可选，允许的前端来源（逗号分隔）
+
 ## Start
 ```bash
 npm run start
